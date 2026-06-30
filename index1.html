@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+        body { background: #f8fafc; font-family: 'Outfit', sans-serif; }
+        
+        .luxury-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* ปุ่มเล็กลง แต่คงความหรู */
+        .btn-press {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .btn-press:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .btn-press:active { transform: translateY(2px); box-shadow: none; }
+        
+        .gold-gradient { background: linear-gradient(135deg, #d4af37 0%, #f9f295 50%, #d4af37 100%); }
+    </style>
+</head>
+<body class="p-10 md:p-20">
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-6xl font-black mb-20 text-center text-slate-900 uppercase tracking-tighter">Executive Dashboard</h1>
+        
+        <!-- แถวบน: ปุ่มเล็กลง -->
+        <div id="top-grid" class="grid grid-cols-1 md:grid-cols-2 gap-10 mb-12"></div>
+
+        <!-- แถวล่าง: เซนเซอร์ยักษ์ -->
+        <div id="bottom-grid" class="grid grid-cols-1 md:grid-cols-3 gap-10"></div>
+    </div>
+
+    <script>
+        async function update() {
+            const sensorLabels = ["Temperature", "Humidity", "Soil Moisture"];
+            const units = ["°C", "%", "%"];
+            const res = await fetch('http://tc.sbtc-mng.com/api.php');
+            const { data } = await res.json();
+            
+            const topGrid = document.getElementById('top-grid');
+            const bottomGrid = document.getElementById('bottom-grid');
+            
+            topGrid.innerHTML = '';
+            bottomGrid.innerHTML = '';
+
+            // ปุ่มควบคุมแถวบน (เล็กลง)
+            data.filter((_, i) => i < 2).forEach((d) => {
+                const isStatusOn = d.status === 'ON';
+                const card = document.createElement('div');
+                card.className = "luxury-card p-8 rounded-[2rem] flex flex-col justify-center items-center";
+                card.innerHTML = `
+                    <span class="text-4xl font-black text-slate-900 mb-6 tracking-tighter">${d.device_name}</span>
+                    <button class="btn-press w-[200px] py-4 rounded-[1.5rem] ${isStatusOn ? 'gold-gradient text-white' : 'bg-slate-900 text-white'} font-black text-xl tracking-widest uppercase">
+                        ${isStatusOn ? 'ON' : 'OFF'}
+                    </button>
+                `;
+                topGrid.appendChild(card);
+            });
+
+            // เซนเซอร์แถวล่าง (ขนาดใหญ่สะใจ)
+            sensorLabels.forEach((label, i) => {
+                const card = document.createElement('div');
+                card.className = "luxury-card p-12 rounded-[3rem] flex flex-col justify-center items-center";
+                card.innerHTML = `
+                    <span class="text-2xl font-bold text-slate-400 mb-8 uppercase tracking-widest">${label}</span>
+                    <div class="text-[100px] font-black text-slate-950 leading-none tracking-tighter">
+                        ${20 + (i * 5)}<span class="text-5xl text-yellow-600 ml-4 font-bold">${units[i]}</span>
+                    </div>
+                `;
+                bottomGrid.appendChild(card);
+            });
+        }
+        setInterval(update, 2000);
+        update();
+    </script>
+</body>
+</html>
